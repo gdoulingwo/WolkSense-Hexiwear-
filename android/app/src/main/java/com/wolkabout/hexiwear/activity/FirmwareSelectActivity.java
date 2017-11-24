@@ -53,8 +53,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * @author none
+ *
+ * 这个是设备选择页面
+ */
 @EActivity(R.layout.activity_firmware_select)
-public class FirmwareSelectActivity extends AppCompatActivity implements ServiceConnection {
+public class FirmwareSelectActivity extends AppCompatActivity
+        implements ServiceConnection {
 
     private static final String TAG = FirmwareSelectActivity.class.getSimpleName();
 
@@ -169,7 +175,8 @@ public class FirmwareSelectActivity extends AppCompatActivity implements Service
     void onUpdateInitiated() {
         progressDialog.setMessage(getString(R.string.firmware_update_in_progress));
         progressDialog.setMax(100);
-        progressDialog.getButton(DialogInterface.BUTTON_NEUTRAL).setVisibility(View.VISIBLE);
+        progressDialog.getButton(DialogInterface.BUTTON_NEUTRAL)
+                .setVisibility(View.VISIBLE);
     }
 
     @Receiver(actions = UPDATE_PROGRESS, local = true)

@@ -29,6 +29,9 @@ import com.wolkabout.hexiwear.R;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
+/**
+ * 列表项中包含三个文本项的加载动画
+ * */
 @EViewGroup(R.layout.view_reading_tripple)
 public class TripleReading extends Reading {
 

@@ -34,7 +34,9 @@ import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.SupposeUiThread;
 import org.androidannotations.annotations.UiThread;
 
-
+/**
+ * 封装Dialog，方便使用
+ * */
 @EBean
 public class Dialog {
 
@@ -45,6 +47,7 @@ public class Dialog {
     public void showWarning(final int stringResource) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setPositiveButton(activity.getString(R.string.dismiss), new DialogInterface.OnClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int id) {
                 dialog.dismiss();
             }

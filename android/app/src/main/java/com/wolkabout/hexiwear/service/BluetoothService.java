@@ -106,10 +106,10 @@ public class BluetoothService extends Service {
     private static final byte WRITE_NOTIFICATION = 1;
     private static final byte WRITE_TIME = 3;
 
-    private static final Map<String, BluetoothGattCharacteristic> readableCharacteristics = new HashMap<>();
-    private static final ManufacturerInfo manufacturerInfo = new ManufacturerInfo();
-    private static final Queue<String> readingQueue = new ArrayBlockingQueue<>(12);
-    private static final Queue<byte[]> notificationsQueue = new LinkedBlockingDeque<>();
+    private static final Map<String, BluetoothGattCharacteristic> READABLE_CHARACTERISTICS = new HashMap<>();
+    private static final ManufacturerInfo MANUFACTURER_INFO = new ManufacturerInfo();
+    private static final Queue<String> READING_QUEUE = new ArrayBlockingQueue<>(12);
+    private static final Queue<byte[]> NOTIFICATIONS_QUEUE = new LinkedBlockingDeque<>();
 
     private volatile boolean shouldUpdateTime;
     private volatile boolean isConnected;
@@ -174,7 +174,7 @@ public class BluetoothService extends Service {
         bluetoothDevice = device;
         createGATT(device);
 
-        if (credentials.username().get().equals("Demo")) {
+        if ("Demo".equals(credentials.username().get())) {
             return;
         }
 
@@ -246,7 +246,7 @@ public class BluetoothService extends Service {
                         final Intent intent = new Intent(HIDE_TIME_PROGRESS);
                         sendBroadcast(intent);
 
-                        final BluetoothGattCharacteristic batteryCharacteristic = readableCharacteristics.get(Characteristic.BATTERY.getUuid());
+                        final BluetoothGattCharacteristic batteryCharacteristic = READABLE_CHARACTERISTICS.get(Characteristic.BATTERY.getUuid());
                         gatt.setCharacteristicNotification(batteryCharacteristic, true);
                         for (BluetoothGattDescriptor descriptor : batteryCharacteristic.getDescriptors()) {
                             if (descriptor.getUuid().toString().startsWith("00002904")) {
@@ -257,12 +257,12 @@ public class BluetoothService extends Service {
                         break;
                     case WRITE_NOTIFICATION:
                         Log.i(TAG, "Notification sent.");
-                        if (notificationsQueue.isEmpty()) {
+                        if (NOTIFICATIONS_QUEUE.isEmpty()) {
                             Log.i(TAG, "Reading characteristics...");
                             readNextCharacteristics(gatt);
                         } else {
                             Log.i(TAG, "writing next notification...");
-                            alertIn.setValue(notificationsQueue.poll());
+                            alertIn.setValue(NOTIFICATIONS_QUEUE.poll());
                             gatt.writeCharacteristic(alertIn);
                         }
                         break;
@@ -286,13 +286,14 @@ public class BluetoothService extends Service {
 
                 final String characteristicUuid = gattCharacteristic.getUuid().toString();
                 final Characteristic characteristic = Characteristic.byUuid(characteristicUuid);
+                assert characteristic != null;
                 switch (characteristic) {
                     case MANUFACTURER:
-                        manufacturerInfo.manufacturer = gattCharacteristic.getStringValue(0);
+                        MANUFACTURER_INFO.manufacturer = gattCharacteristic.getStringValue(0);
                         readCharacteristic(gatt, Characteristic.FW_REVISION);
                         break;
                     case FW_REVISION:
-                        manufacturerInfo.firmwareRevision = gattCharacteristic.getStringValue(0);
+                        MANUFACTURER_INFO.firmwareRevision = gattCharacteristic.getStringValue(0);
                         readCharacteristic(gatt, Characteristic.MODE);
                         break;
                     default:
@@ -310,10 +311,10 @@ public class BluetoothService extends Service {
                             updateTime();
                         }
 
-                        if (notificationsQueue.isEmpty()) {
+                        if (NOTIFICATIONS_QUEUE.isEmpty()) {
                             readNextCharacteristics(gatt);
                         } else {
-                            alertIn.setValue(notificationsQueue.poll());
+                            alertIn.setValue(NOTIFICATIONS_QUEUE.poll());
                             gatt.writeCharacteristic(alertIn);
                         }
 
@@ -346,12 +347,12 @@ public class BluetoothService extends Service {
     }
 
     private void setReadingQueue() {
-        readingQueue.clear();
-        readingQueue.add(Characteristic.MODE.name());
+        READING_QUEUE.clear();
+        READING_QUEUE.add(Characteristic.MODE.name());
         final List<String> enabledPreferences = hexiwearDevices.getEnabledPreferences(bluetoothDevice.getAddress());
         for (String characteristic : enabledPreferences) {
             if (mode.hasCharacteristic(characteristic)) {
-                readingQueue.add(characteristic);
+                READING_QUEUE.add(characteristic);
             }
         }
     }
@@ -363,9 +364,9 @@ public class BluetoothService extends Service {
         }
 
         if (preferenceEnabled) {
-            readingQueue.add(preferenceName);
+            READING_QUEUE.add(preferenceName);
         } else {
-            readingQueue.remove(preferenceName);
+            READING_QUEUE.remove(preferenceName);
         }
     }
 
@@ -402,7 +403,7 @@ public class BluetoothService extends Service {
         notification[0] = WRITE_NOTIFICATION;
         notification[1] = type;
         notification[2] = ByteUtils.intToByte(amount);
-        notificationsQueue.add(notification);
+        NOTIFICATIONS_QUEUE.add(notification);
     }
 
     private void onBluetoothDataReceived(final Characteristic type, final byte[] data) {
@@ -418,8 +419,8 @@ public class BluetoothService extends Service {
     }
 
     void readNextCharacteristics(final BluetoothGatt gatt) {
-        final String characteristicUuid = readingQueue.poll();
-        readingQueue.add(characteristicUuid);
+        final String characteristicUuid = READING_QUEUE.poll();
+        READING_QUEUE.add(characteristicUuid);
         readCharacteristic(gatt, Characteristic.valueOf(characteristicUuid));
     }
 
@@ -428,7 +429,7 @@ public class BluetoothService extends Service {
             return;
         }
 
-        final BluetoothGattCharacteristic gattCharacteristic = readableCharacteristics.get(characteristic.getUuid());
+        final BluetoothGattCharacteristic gattCharacteristic = READABLE_CHARACTERISTICS.get(characteristic.getUuid());
         if (gattCharacteristic != null) {
             gatt.readCharacteristic(gattCharacteristic);
         }
@@ -459,7 +460,7 @@ public class BluetoothService extends Service {
                 NotificationService_.intent(BluetoothService.this).start();
             } else if (characteristic != null) {
                 Log.v(TAG, characteristic.getType() + ": " + characteristic.name());
-                readableCharacteristics.put(characteristicUuid, gattCharacteristic);
+                READABLE_CHARACTERISTICS.put(characteristicUuid, gattCharacteristic);
             } else {
                 Log.v(TAG, "UNKNOWN: " + characteristicUuid);
             }
@@ -542,7 +543,7 @@ public class BluetoothService extends Service {
     }
 
     public ManufacturerInfo getManufacturerInfo() {
-        return manufacturerInfo;
+        return MANUFACTURER_INFO;
     }
 
     protected Notification getNotification(final BluetoothDevice device) {

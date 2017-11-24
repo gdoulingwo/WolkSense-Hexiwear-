@@ -42,6 +42,9 @@ import org.androidannotations.annotations.ViewById;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Hexiwear的适配器
+ */
 @EBean
 public class HexiwearListAdapter extends BaseAdapter {
 
@@ -107,14 +110,14 @@ public class HexiwearListAdapter extends BaseAdapter {
         }
 
         @Override
-        public void setChecked(final boolean checked) {
-            this.checked = checked;
-            onCheckedChanged();
+        public boolean isChecked() {
+            return checked;
         }
 
         @Override
-        public boolean isChecked() {
-            return checked;
+        public void setChecked(final boolean checked) {
+            this.checked = checked;
+            onCheckedChanged();
         }
 
         @Override

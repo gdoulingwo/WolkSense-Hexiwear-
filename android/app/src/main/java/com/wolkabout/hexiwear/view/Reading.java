@@ -33,6 +33,9 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
+/**
+ * loading
+ * */
 @EViewGroup
 public class Reading extends LinearLayout {
 

@@ -29,6 +29,9 @@ import com.wolkabout.hexiwear.R;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
+/**
+ * 列表项加载动画
+ * */
 @EViewGroup(R.layout.view_reading_single)
 public class SingleReading extends Reading {
 

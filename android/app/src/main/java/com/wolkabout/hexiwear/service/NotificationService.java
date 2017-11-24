@@ -20,6 +20,7 @@
 
 package com.wolkabout.hexiwear.service;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Service;
@@ -32,6 +33,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.CallLog;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -44,6 +46,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author none
+ *
+ * 通知服务
+ */
 @EService
 public class NotificationService extends Service {
 
@@ -78,6 +85,7 @@ public class NotificationService extends Service {
 
         checkMissedCallsCount();
         final ContentObserver contentObserver = new ContentObserver(new Handler()) {
+            @Override
             public void onChange(boolean selfChange) {
                 checkMissedCallsCount();
             }
@@ -89,7 +97,19 @@ public class NotificationService extends Service {
 
     @Background
     void checkMissedCallsCount() {
-        final Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, null, CallLog.Calls.TYPE + " = ? AND " + CallLog.Calls.NEW + " = ?", new String[]{Integer.toString(CallLog.Calls.MISSED_TYPE), "1"}, CallLog.Calls.DATE + " DESC ");
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
+                != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        final Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI,
+                null, CallLog.Calls.TYPE + " = ? AND " + CallLog.Calls.NEW + " = ?", new String[]{Integer.toString(CallLog.Calls.MISSED_TYPE), "1"}, CallLog.Calls.DATE + " DESC ");
         if (cursor != null) {
             final int count = cursor.getCount();
             if (numberOfMissedCalls != count) {
@@ -109,6 +129,7 @@ public class NotificationService extends Service {
 
         checkUnreadMessageCount();
         final ContentObserver contentObserver = new ContentObserver(new Handler()) {
+            @Override
             public void onChange(boolean selfChange) {
                 checkUnreadMessageCount();
             }
@@ -139,6 +160,7 @@ public class NotificationService extends Service {
             unreadEmailCounts.put(account.name, -1);
             checkUnreadEmailCount(account);
             final ContentObserver contentObserver = new ContentObserver(new Handler()) {
+                @Override
                 public void onChange(boolean selfChange) {
                     checkUnreadEmailCount(account);
                 }

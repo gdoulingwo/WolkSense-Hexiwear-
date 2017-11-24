@@ -54,6 +54,11 @@ import org.androidannotations.rest.spring.annotations.RestService;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author none
+ *
+ * 设备注册服务
+ */
 @EBean
 public class DeviceRegistrationService {
 
@@ -76,7 +81,7 @@ public class DeviceRegistrationService {
 
     @Background
     public void registerHexiwearDevice(final BluetoothDevice device) {
-        if (credentials.username().get().equals("Demo")) {
+        if ("Demo".equals(credentials.username().get())) {
             final int demoNumber = devicesStore.getDevices().size() + 1;
             final HexiwearDevice hexiwearDevice = new HexiwearDevice(device.getName(), "", device.getAddress(), "", "Demo device " + demoNumber);
             devicesStore.storeDevice(hexiwearDevice);
@@ -104,6 +109,7 @@ public class DeviceRegistrationService {
         builder.setView(view);
         builder.setTitle(R.string.activation_dialog_title);
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int id) {
                 //dialog.cancel();
             }

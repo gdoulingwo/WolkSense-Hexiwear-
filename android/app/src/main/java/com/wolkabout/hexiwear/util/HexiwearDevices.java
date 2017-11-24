@@ -41,6 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author none
+ *
+ * // TODO 需要为HexiwearDevice增加equal和hashcode方法
+ */
 @EBean(scope = EBean.Scope.Singleton)
 public class HexiwearDevices {
 

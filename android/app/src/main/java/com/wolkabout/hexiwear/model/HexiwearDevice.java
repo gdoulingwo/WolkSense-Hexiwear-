@@ -72,4 +72,5 @@ public class HexiwearDevice extends Device implements Serializable {
                 ", wolkName='" + wolkName + '\'' +
                 '}';
     }
+
 }

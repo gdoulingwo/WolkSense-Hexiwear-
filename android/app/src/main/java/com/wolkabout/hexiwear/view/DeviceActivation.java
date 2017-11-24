@@ -38,6 +38,11 @@ import org.androidannotations.annotations.ViewById;
 
 import java.util.List;
 
+/**
+ * 设备激活的自定义布局
+ *
+ * 这个就是那个弹出的Dialog，会让你填充Hexiwear的名称
+ * */
 @EViewGroup(R.layout.view_register_device)
 public class DeviceActivation extends LinearLayout {
 

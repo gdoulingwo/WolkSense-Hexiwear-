@@ -64,6 +64,11 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
+/**
+ * @author none
+ *
+ * 数据读取界面，这里用于获取所有的数据
+ */
 @EActivity(R.layout.activity_readings)
 @OptionsMenu(R.menu.menu_readings)
 public class ReadingsActivity extends AppCompatActivity implements ServiceConnection {
@@ -349,7 +354,7 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
 
     @OptionsItem
     void toggleTracking() {
-        if (credentials.username().get().equals("Demo")) {
+        if ("Demo".equals(credentials.username().get())) {
             return;
         }
 

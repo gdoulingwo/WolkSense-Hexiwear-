@@ -24,6 +24,11 @@ import com.wolkabout.hexiwear.model.Characteristic;
 
 import java.util.Locale;
 
+/**
+ * @author none
+ *
+ * 数据转换工具
+ */
 public class DataConverter {
 
     private static final String INTEGER = "%d";
@@ -35,7 +40,9 @@ public class DataConverter {
     }
 
     public static String parseBluetoothData(final Characteristic characteristic, final byte[] data) {
-        if (data == null || data.length == 0) return "";
+        if (data == null || data.length == 0) {
+            return "";
+        }
 
         float floatVal;
         float xfloatVal;
@@ -87,7 +94,9 @@ public class DataConverter {
     }
 
     public static String formatForPublushing(final Characteristic characteristic, final byte[] data) {
-        if (data == null || data.length == 0) return "";
+        if (data == null || data.length == 0) {
+            return "";
+        }
 
         switch (characteristic) {
             case HEARTRATE:

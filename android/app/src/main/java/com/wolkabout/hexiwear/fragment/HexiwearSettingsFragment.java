@@ -20,6 +20,7 @@
 
 package com.wolkabout.hexiwear.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.Preference;
@@ -95,7 +96,7 @@ public class HexiwearSettingsFragment extends PreferenceFragment implements Shar
             }
         }
 
-        final String interval = String.format(getActivity().getString(R.string.preferences_publish_interval_value), hexiwearDevices.getPublishInterval(device));
+        @SuppressLint("StringFormatMatches") final String interval = String.format(getActivity().getString(R.string.preferences_publish_interval_value), hexiwearDevices.getPublishInterval(device));
         publishInterval.setSummary(interval);
         publishInterval.setOnPreferenceChangeListener(this);
         keepAlive.setChecked(hexiwearDevices.shouldKeepAlive(device));
@@ -110,7 +111,7 @@ public class HexiwearSettingsFragment extends PreferenceFragment implements Shar
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        final boolean isDemo = credentials.username().get().equals("Demo");
+        final boolean isDemo = "Demo".equals(credentials.username().get());
         if (preference == publishInterval) {
             if (isDemo) {
                 return true;
@@ -118,7 +119,7 @@ public class HexiwearSettingsFragment extends PreferenceFragment implements Shar
 
             Log.d(TAG, "Publishing time changed. New value is: " + newValue);
             hexiwearDevices.setPublishInterval(device, Integer.valueOf((String) newValue));
-            final String interval = String.format(getActivity().getString(R.string.preferences_publish_interval_value), hexiwearDevices.getPublishInterval(device));
+            @SuppressLint("StringFormatMatches") final String interval = String.format(getActivity().getString(R.string.preferences_publish_interval_value), hexiwearDevices.getPublishInterval(device));
             publishInterval.setSummary(interval);
             LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(new Intent(BluetoothService.PUBLISH_TIME_CHANGED));
         } else if (preference == keepAlive) {

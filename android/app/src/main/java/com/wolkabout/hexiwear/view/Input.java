@@ -40,6 +40,9 @@ import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
+/**
+ * 自定义文本输入框
+ * */
 @EViewGroup(R.layout.view_input)
 public class Input extends TextInputLayout {
 

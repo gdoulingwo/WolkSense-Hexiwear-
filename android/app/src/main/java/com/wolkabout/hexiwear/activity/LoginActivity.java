@@ -202,5 +202,4 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(LoginActivity.this, "Failed to verify email.", Toast.LENGTH_LONG).show();
         }
     }
-
 }

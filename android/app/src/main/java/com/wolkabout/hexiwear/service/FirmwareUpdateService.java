@@ -55,6 +55,11 @@ import org.androidannotations.annotations.SystemService;
 
 import java.util.UUID;
 
+/**
+ * @author none
+ *
+ * 硬件更新服务
+ */
 @EService
 public class FirmwareUpdateService extends Service {
 
@@ -114,6 +119,7 @@ public class FirmwareUpdateService extends Service {
         sendBroadcast(new Intent(event));
     }
 
+    @Override
     public void sendBroadcast(final Intent intent) {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }

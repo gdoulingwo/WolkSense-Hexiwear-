@@ -29,10 +29,15 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+/**
+ * @author none
+ * 字节流读取工具
+ */
 public class ByteUtils {
 
     private static final String TAG = ByteUtils.class.getSimpleName();
-    private static final String CHARSET_NAME = "ISO646-US"; // ASCII
+    // 编码类型 -> ASCII
+    private static final String CHARSET_NAME = "ISO646-US";
 
     private ByteUtils() {
         // Not meant to be instantiated.

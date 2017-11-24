@@ -25,30 +25,93 @@ import java.util.List;
 
 public enum Characteristic {
 
+    /**
+     * 加速度
+     */
     ACCELERATION(Type.READING, "00002001-0000-1000-8000-00805f9b34fb", "g"),
+    /**
+     * 陀螺仪
+     * */
     GYRO(Type.READING, "00002002-0000-1000-8000-00805f9b34fb", "\u00B0/s"),
+    /**
+     * 磁场
+     * */
     MAGNET(Type.READING, "00002003-0000-1000-8000-00805f9b34fb", "\u00B5T"),
+    /**
+     * 亮度
+     * */
     LIGHT(Type.READING, "00002011-0000-1000-8000-00805f9b34fb", "%"),
+    /**
+     * 温度
+     * */
     TEMPERATURE(Type.READING, "00002012-0000-1000-8000-00805f9b34fb", "\u2103"),
+    /**
+     * 湿度
+     * */
     HUMIDITY(Type.READING, "00002013-0000-1000-8000-00805f9b34fb", "%"),
+    /**
+     * 大气压
+     * */
     PRESSURE(Type.READING, "00002014-0000-1000-8000-00805f9b34fb", "kPa"),
+    /**
+     * 电量
+     * */
     BATTERY(Type.READING, "00002a19-0000-1000-8000-00805f9b34fb", "%"),
+    /**
+     * 心率
+     * */
     HEARTRATE(Type.READING, "00002021-0000-1000-8000-00805f9b34fb", "bpm"),
+    /**
+     * 步数
+     * */
     STEPS(Type.READING, "00002022-0000-1000-8000-00805f9b34fb", ""),
+    /**
+     * 卡路里
+     * */
     CALORIES(Type.READING, "00002023-0000-1000-8000-00805f9b34fb", ""),
 
+    /**
+     *
+     * */
     ALERT_IN(Type.ALERT, "00002031-0000-1000-8000-00805f9b34fb"),
+    /**
+     *
+     * */
     ALERT_OUT(Type.ALERT, "00002032-0000-1000-8000-00805f9b34fb"),
 
+    /**
+     *
+     * */
     MODE(Type.MODE, "00002041-0000-1000-8000-00805f9b34fb"),
 
+    /**
+     * 序列号
+     * */
     SERIAL(Type.INFO, "00002a25-0000-1000-8000-00805f9b34fb"),
+    /**
+     * 硬件版本号，Firmware version
+     * */
     FW_REVISION(Type.INFO, "00002a26-0000-1000-8000-00805f9b34fb"),
+    /**
+     * 版本号
+     * */
     HW_REVISION(Type.INFO, "00002a27-0000-1000-8000-00805f9b34fb"),
+    /**
+     * 制造商
+     * */
     MANUFACTURER(Type.INFO, "00002a29-0000-1000-8000-00805f9b34fb"),
 
+    /**
+     * 中心点
+     * */
     CONTROL_POINT(Type.OTAP, "01ff5551-ba5e-f4ee-5ca1-eb1e5e4b1ce0"),
+    /**
+     * 数据
+     * */
     DATA(Type.OTAP, "01ff5552-ba5e-f4ee-5ca1-eb1e5e4b1ce0"),
+    /**
+     * 状态
+     * */
     STATE(Type.OTAP, "01ff5553-ba5e-f4ee-5ca1-eb1e5e4b1ce0");
 
     private final Type type;

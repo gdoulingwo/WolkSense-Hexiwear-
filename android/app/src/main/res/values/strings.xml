@@ -35,7 +35,7 @@
     <string name="registration_activity_title">Registration</string>
     <string name="registration_success">Thank you for signing up. You will receive an email from us with further instructions how to access your account.</string>
     <string name="registration_error_all_fields_required">Please fill in all the registration fields.</string>
-    <string name="registration_failed">The registration was not successful. Please try again.</string>
+    <string name="registration_failed">The registration was not successful. `.</string>
     <string name="registration_accept_terms">In order to proceed, you need to accept the Terms and conditions.</string>
     <string name="registration_accept_privacy_and_terms">I agree with privacy policy and Terms &amp; Conditions</string>
     <string name="registration_privacy_policy">See <a href="https://wolksense.com/documents/privacypolicy.html">privacy policy</a>.</string>

@@ -26,6 +26,11 @@ import com.wolkabout.hexiwear.R;
 
 import org.parceler.Parcel;
 
+/**
+ * @author none
+ *
+ * 蓝牙设备的封装类
+ */
 @Parcel
 public class BluetoothDeviceWrapper {
 
