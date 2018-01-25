@@ -32,10 +32,7 @@ import android.widget.TextView;
 
 import com.wolkabout.hexiwear.R;
 import com.wolkabout.hexiwear.model.BluetoothDeviceWrapper;
-import com.wolkabout.hexiwear.model.HexiwearDevice;
-import com.wolkabout.hexiwear.util.HexiwearDevices;
 
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.RootContext;
@@ -45,6 +42,9 @@ import org.androidannotations.annotations.ViewById;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author notzuonotdied
+ */
 @EBean
 public class DeviceListAdapter extends BaseAdapter {
 
@@ -52,9 +52,6 @@ public class DeviceListAdapter extends BaseAdapter {
 
     @RootContext
     Context context;
-
-    @Bean
-    static HexiwearDevices hexiwearDevices;
 
     @Override
     public int getCount() {
@@ -127,10 +124,7 @@ public class DeviceListAdapter extends BaseAdapter {
             final BluetoothDevice device = wrapper.getDevice();
 
             final String name = device.getName();
-            final HexiwearDevice hexiwearDevice = hexiwearDevices.getDevice(device.getAddress());
-            if (hexiwearDevice != null) {
-                deviceName.setText(hexiwearDevice.getWolkName());
-            } else if (!TextUtils.isEmpty(name)) {
+            if (!TextUtils.isEmpty(name)) {
                 deviceName.setText(name);
             } else {
                 deviceName.setText(device.getAddress());
@@ -142,7 +136,5 @@ public class DeviceListAdapter extends BaseAdapter {
             signalStrength.setImageResource(wrapper.getSignalStrength());
             otapMode.setVisibility(wrapper.isInOtapMode() ? VISIBLE : GONE);
         }
-
     }
-
 }

@@ -20,10 +20,9 @@
 
 package com.wolkabout.hexiwear.activity;
 
-import android.app.ProgressDialog;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
@@ -31,44 +30,38 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.txusballesteros.SnakeView;
 import com.wolkabout.hexiwear.R;
 import com.wolkabout.hexiwear.model.Characteristic;
-import com.wolkabout.hexiwear.model.HexiwearDevice;
 import com.wolkabout.hexiwear.model.Mode;
 import com.wolkabout.hexiwear.service.BluetoothService;
 import com.wolkabout.hexiwear.service.BluetoothService_;
-import com.wolkabout.hexiwear.util.Dialog;
-import com.wolkabout.hexiwear.util.HexiwearDevices;
 import com.wolkabout.hexiwear.view.Reading;
 import com.wolkabout.hexiwear.view.SingleReading;
 import com.wolkabout.hexiwear.view.TripleReading;
-import com.wolkabout.wolkrestandroid.Credentials_;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
-import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.annotations.Receiver;
 import org.androidannotations.annotations.ViewById;
-import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 
 /**
- * @author none
+ * 将手环中的数据读取出来
  *
- * 数据读取界面，这里用于获取所有的数据
+ * @author notzuonotdied
  */
+@SuppressLint("Registered")
 @EActivity(R.layout.activity_readings)
 @OptionsMenu(R.menu.menu_readings)
 public class ReadingsActivity extends AppCompatActivity implements ServiceConnection {
@@ -126,34 +119,24 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
     @ViewById
     LinearLayout readings;
 
-    @Bean
-    HexiwearDevices hexiwearDevices;
+    @ViewById
+    SnakeView snake;
 
-    @Pref
-    Credentials_ credentials;
-
-    @Bean
-    Dialog dialog;
-
-    private ProgressDialog progressDialog;
-    private HexiwearDevice hexiwearDevice;
-    private BluetoothService bluetoothService;
     private boolean isBound;
     private Mode mode = Mode.IDLE;
     private boolean shouldUnpair;
 
     @AfterInject
     void startService() {
-        hexiwearDevice = hexiwearDevices.getDevice(device.getAddress());
-        if (hexiwearDevices.shouldKeepAlive(hexiwearDevice)) {
-            BluetoothService_.intent(this).start();
-        }
+        BluetoothService_.intent(this).start();
         isBound = bindService(BluetoothService_.intent(this).get(), this, BIND_AUTO_CREATE);
     }
 
     @AfterViews
     void setViews() {
-        toolbar.setTitle(hexiwearDevice.getWolkName());
+        toolbar.setTitle(getString(R.string.app_name));
+        snake.setMinValue(0);
+        snake.setMaxValue(222);
         setSupportActionBar(toolbar);
         progressBar.setVisibility(View.VISIBLE);
     }
@@ -172,7 +155,7 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
         connectionStatus.setText(mode.getStringResource());
 
         if (mode == Mode.IDLE) {
-            dialog.showInfo(R.string.readings_idle_mode, false);
+            showInfo(R.string.readings_idle_mode);
         }
 
         setReadingVisibility(mode);
@@ -186,14 +169,11 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
 
         try {
             device.getClass().getMethod("removeBond", (Class[]) null).invoke(device, (Object[]) null);
-            dialog.shortToast(R.string.device_unpaired);
-            if (progressDialog != null) {
-                progressDialog.dismiss();
-            }
+            showInfo(R.string.device_unpaired);
             finish();
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
-            dialog.shortToast(R.string.failed_to_unpair);
+            showInfo(R.string.failed_to_unpair);
         }
     }
 
@@ -211,24 +191,31 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
         if (progressBar == null) {
             return;
         }
-
         progressBar.setVisibility(View.INVISIBLE);
     }
 
+    /**
+     * 根据当前的模式选择显示的数据
+     *
+     * @param mode 模式
+     */
     private void setReadingVisibility(final Mode mode) {
-        final Map<String, Boolean> displayPreferences = hexiwearDevices.getDisplayPreferences(device.getAddress());
         for (int i = 0; i < readings.getChildCount(); i++) {
-            final Reading reading = (Reading) readings.getChildAt(i);
-            final Characteristic readingType = reading.getReadingType();
-            final boolean readingEnabled = displayPreferences.get(readingType.name());
-            reading.setVisibility(readingEnabled && mode.hasCharacteristic(readingType) ? View.VISIBLE : View.GONE);
+            final View view = readings.getChildAt(i);
+            if (view instanceof SnakeView) {
+                snake.setVisibility(mode.hasCharacteristic(Characteristic.HEARTRATE) ? View.VISIBLE : View.GONE);
+            } else {
+                final Reading reading = (Reading) view;
+                final Characteristic readingType = reading.getReadingType();
+                reading.setVisibility(mode.hasCharacteristic(readingType) ? View.VISIBLE : View.GONE);
+            }
         }
     }
 
     @Override
     public void onServiceConnected(final ComponentName name, final IBinder service) {
         final BluetoothService.ServiceBinder binder = (BluetoothService.ServiceBinder) service;
-        bluetoothService = binder.getService();
+        BluetoothService bluetoothService = binder.getService();
         if (!bluetoothService.isConnected()) {
             bluetoothService.startReading(device);
         }
@@ -260,7 +247,9 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
 
     @Receiver(actions = BluetoothService.CONNECTION_STATE_CHANGED, local = true)
     void onConnectionStateChanged(@Receiver.Extra final boolean connectionState) {
-        connectionStatus.setText(connectionState ? R.string.readings_connection_connected : R.string.readings_connection_reconnecting);
+        connectionStatus.setText(connectionState ?
+                R.string.readings_connection_connected :
+                R.string.readings_connection_reconnecting);
     }
 
     @Receiver(actions = BluetoothService.DATA_AVAILABLE, local = true)
@@ -295,6 +284,7 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
                 break;
             case HEARTRATE:
                 readingHeartRate.setValue(data);
+                snake.addValue(Integer.parseInt(data.replace("bpm", "").trim()));
                 break;
             case LIGHT:
                 readingLight.setValue(data);
@@ -335,63 +325,15 @@ public class ReadingsActivity extends AppCompatActivity implements ServiceConnec
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        final boolean shouldTransmit = hexiwearDevices.shouldTransmit(device);
-        final int icon = shouldTransmit ? R.drawable.ic_cloud_queue_white_48dp : R.drawable.ic_cloud_off_white_48dp;
-        menu.getItem(0).setIcon(icon);
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    @OptionsItem
-    void openSettings() {
-        SettingsActivity_.intent(this).device(hexiwearDevice).manufacturerInfo(bluetoothService.getManufacturerInfo()).start();
-    }
-
-    @OptionsItem
-    void setTime() {
-        bluetoothService.setTime();
-    }
-
-    @OptionsItem
-    void toggleTracking() {
-        if ("Demo".equals(credentials.username().get())) {
-            return;
-        }
-
-        hexiwearDevices.toggleTracking(device);
-        final boolean shouldTransmit = hexiwearDevices.shouldTransmit(device);
-        bluetoothService.setTracking(shouldTransmit);
-        supportInvalidateOptionsMenu();
-    }
-
-    @OptionsItem
-    void unpair() {
-        dialog.showConfirmation(0, R.string.unpair_message, R.string.yes, R.string.no, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                progressDialog = dialog.createProgressDialog(R.string.readings_unpairing);
-                progressDialog.show();
-                stopBluetoothServiceAndUnpair();
-            }
-        }, true);
-    }
-
-    private void stopBluetoothServiceAndUnpair() {
-        shouldUnpair = true;
-        if (isBound) {
-            unbindService(this);
-            isBound = false;
-        }
-        BluetoothService_.intent(this).stop();
-    }
-
-    @Override
     public void onBackPressed() {
-        if (isTaskRoot()) {
-            MainActivity_.intent(this).start();
-        }
         BluetoothService_.intent(this).stop();
+        if (isTaskRoot()) {
+            FindDeviceActivity_.intent(this).start();
+        }
         super.onBackPressed();
     }
 
+    private void showInfo(int messageId) {
+        Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show();
+    }
 }

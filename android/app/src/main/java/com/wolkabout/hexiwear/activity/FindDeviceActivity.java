@@ -20,9 +20,9 @@
 
 package com.wolkabout.hexiwear.activity;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
@@ -30,7 +30,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -43,10 +42,6 @@ import com.wolkabout.hexiwear.model.BluetoothDeviceWrapper;
 import com.wolkabout.hexiwear.service.BluetoothService;
 import com.wolkabout.hexiwear.service.BluetoothService_;
 import com.wolkabout.hexiwear.service.DeviceDiscoveryService;
-import com.wolkabout.hexiwear.service.DeviceRegistrationService;
-import com.wolkabout.hexiwear.util.Dialog;
-import com.wolkabout.hexiwear.util.HexiwearDevices;
-import com.wolkabout.wolkrestandroid.Credentials_;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
@@ -54,19 +49,17 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ItemLongClick;
-import org.androidannotations.annotations.OptionsItem;
-import org.androidannotations.annotations.OptionsMenu;
-import org.androidannotations.annotations.OptionsMenuItem;
 import org.androidannotations.annotations.Receiver;
 import org.androidannotations.annotations.ViewById;
-import org.androidannotations.annotations.sharedpreferences.Pref;
 
-@OptionsMenu(R.menu.menu_main)
+/**
+ * @author notzuonotdied
+ */
+@SuppressLint("Registered")
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity implements ServiceConnection {
+public class FindDeviceActivity extends AppCompatActivity implements ServiceConnection {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String OTAP_PREFIX = "OTAP";
+    private static final String TAG = FindDeviceActivity.class.getSimpleName();
 
     @Bean
     DeviceListAdapter adapter;
@@ -86,36 +79,17 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     @ViewById
     TextView emptyListView;
 
-    @OptionsMenuItem
-    MenuItem toggleTracking;
-
-    @Pref
-    Credentials_ credentials;
-
     @Bean
     DeviceDiscoveryService deviceDiscoveryService;
 
-    @Bean
-    DeviceRegistrationService deviceRegistrationService;
-
-    @Bean
-    HexiwearDevices devicesStore;
-
-    @Bean
-    Dialog dialog;
-
     private boolean serviceBound;
-
-    @AfterInject
-    void setStore() {
-        devicesStore.init();
-    }
 
     @AfterViews
     void setViews() {
         Log.d(TAG, "Setting views ...");
         setSupportActionBar(toolbar);
         listDevices.setAdapter(adapter);
+
         deviceDiscoveryService.startScan();
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -138,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         deviceDiscoveryService.cancelScan();
         final BluetoothDevice device = wrapper.getDevice();
         if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            Log.i(TAG, "bondWithDevice: 当前");
             onBonded(device);
         } else {
             device.createBond();
@@ -149,24 +124,19 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         if (wrapper.getDevice().getBondState() != BluetoothDevice.BOND_BONDED) {
             return;
         }
-
-        dialog.showConfirmation(0, R.string.unpair_message, R.string.yes, R.string.no, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                unbindDevice(wrapper);
-            }
-        }, true);
+        unbindDevice(wrapper);
     }
 
     private void unbindDevice(BluetoothDeviceWrapper wrapper) {
         try {
             final BluetoothDevice device = wrapper.getDevice();
-            device.getClass().getMethod("removeBond", (Class[]) null).invoke(device, (Object[]) null);
-            dialog.shortToast(R.string.device_unpaired);
+            device.getClass().getMethod("removeBond", (Class[]) null)
+                    .invoke(device, (Object[]) null);
+            showInfo(R.string.device_unpaired);
             adapter.notifyDataSetChanged();
         } catch (Exception e) {
             Log.e(TAG, "Can't remove bond", e);
-            dialog.shortToast(R.string.failed_to_unpair);
+            showInfo(R.string.failed_to_unpair);
         }
     }
 
@@ -176,12 +146,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         final BluetoothService bluetoothService = binder.getService();
         final BluetoothDevice currentDevice = bluetoothService.getCurrentDevice();
         if (currentDevice != null) {
-            ReadingsActivity_.intent(this).device(currentDevice).flags(Intent.FLAG_ACTIVITY_NEW_TASK).start();
+            ReadingsActivity_.intent(this)
+                    .device(currentDevice)
+                    .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .start();
             final BluetoothDeviceWrapper wrapper = new BluetoothDeviceWrapper();
             wrapper.setDevice(currentDevice);
             wrapper.setSignalStrength(-65);
             adapter.add(wrapper);
-
         }
 
         unbindService(this);
@@ -204,11 +176,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     @Override
     protected void onResume() {
         super.onResume();
-
         if (adapter == null) {
             return;
         }
-
         adapter.notifyDataSetChanged();
     }
 
@@ -225,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             emptyListView.setVisibility(View.VISIBLE);
         }
         progressBar.setVisibility(View.INVISIBLE);
-        toolbar.setTitle(credentials.username().get());
+        toolbar.setTitle(getString(R.string.app_name));
     }
 
     @Receiver(actions = DeviceDiscoveryService.DEVICE_DISCOVERED, local = true)
@@ -240,54 +210,40 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
         final int newBondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1);
 
-        Log.d(TAG, device.getName() + "(" + device.getAddress() + ") changed state: " + previousBondState + " -> " + newBondState);
+        Log.d(TAG, device.getName() + "(" + device.getAddress() + ") changed state: "
+                + previousBondState + " -> " + newBondState);
         adapter.notifyDataSetChanged();
 
         if (newBondState == BluetoothDevice.BOND_BONDING && previousBondState == BluetoothDevice.BOND_NONE) {
             Log.e(TAG, "Was bonding, but failed.");
-            Toast.makeText(this, R.string.discovery_pairing_notification, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.discovery_pairing_notification,
+                    Toast.LENGTH_SHORT).show();
         }
 
         if (newBondState == BluetoothDevice.BOND_BONDED) {
             Log.d(TAG, "New bond state is BONDED, calling onBonded.");
-            dialog.shortToast(R.string.discovery_pairing_successful);
+            showInfo(R.string.discovery_pairing_successful);
             onBonded(device);
-        } else if (previousBondState == BluetoothDevice.BOND_BONDING && newBondState == BluetoothDevice.BOND_NONE) {
-            dialog.shortToast(R.string.discovery_failed_to_pair);
+        } else if (previousBondState == BluetoothDevice.BOND_BONDING
+                && newBondState == BluetoothDevice.BOND_NONE) {
+            showInfo(R.string.discovery_failed_to_pair);
         }
     }
 
     private void onBonded(BluetoothDevice device) {
         Log.i(TAG, "Successfully bonded to: " + device.getName());
-        if (!devicesStore.isRegistered(device)) {
-            deviceRegistrationService.registerHexiwearDevice(device);
-        } else if (device.getName().contains(OTAP_PREFIX)) {
-            FirmwareSelectActivity_.intent(this).device(device).start();
-        } else {
-            ReadingsActivity_.intent(this).flags(Intent.FLAG_ACTIVITY_SINGLE_TOP).device(device).start();
-        }
-    }
-
-    @OptionsItem
-    void changePassword() {
-        PasswordChangeActivity_.intent(this).start();
-    }
-
-    @OptionsItem
-    void signOut() {
-        credentials.clear();
-        LoginActivity_.intent(this).flags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK).start();
-        finish();
+        ReadingsActivity_.intent(this)
+                .flags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .device(device)
+                .start();
     }
 
     @Override
     public void onBackPressed() {
-        dialog.showConfirmationAndCancel(0, R.string.sure_want_to_quit, R.string.yes, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                finishAffinity();
-            }
-        });
+        finishAffinity();
+    }
+
+    private void showInfo(int messageId) {
+        Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show();
     }
 }

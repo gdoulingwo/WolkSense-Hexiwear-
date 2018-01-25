@@ -20,6 +20,7 @@
 
 package com.wolkabout.hexiwear.service;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -39,31 +40,37 @@ import org.androidannotations.annotations.RootContext;
 import org.androidannotations.api.BackgroundExecutor;
 import org.parceler.Parcels;
 
+import java.lang.reflect.Method;
+import java.util.Set;
+
+/**
+ * @author notzuonotdied
+ */
 @EBean
 public class DeviceDiscoveryService {
-
-    private static final String TAG = DeviceDiscoveryService.class.getSimpleName();
-
-    private static final long SCAN_PERIOD = 5000;
-    private static final String SCAN_TASK = "scan";
-    private static final String HEXIWEAR_TAG = "hexiwear";
-    private static final String HEXI_OTAP_TAG = "hexiotap";
 
     public static final String SCAN_STARTED = "scanStarted";
     public static final String SCAN_STOPPED = "scanStopped";
     public static final String DEVICE_DISCOVERED = "deviceDiscovered";
-    public static final String WRAPPER = "wrapper";
-
-    private static final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
+    private static final String WRAPPER = "wrapper";
+    private static final String TAG = DeviceDiscoveryService.class.getSimpleName();
+    private static final long SCAN_PERIOD = 5000;
+    private static final String SCAN_TASK = "scan";
+    private static final String HEXIWEAR_TAG = "hexiwear";
+    private static final String HEXI_OTAP_TAG = "hexiotap";
+    private static final BluetoothAdapter BLUETOOTH_ADAPTER = BluetoothAdapter.getDefaultAdapter();
+    private static ScanCallback lolipopScanCallback;
+    private static BluetoothAdapter.LeScanCallback kitKatScanCallback;
     @RootContext
     Context context;
 
-    private static ScanCallback lolipopScanCallback;
-    private static BluetoothAdapter.LeScanCallback kitKatScanCallback;
-
     public void startScan() {
         if (!isEnabled()) {
+            return;
+        }
+
+        if (getBltList()) {
+            Log.i(TAG, "************连接到已经匹配的设备*************");
             return;
         }
 
@@ -78,9 +85,39 @@ public class DeviceDiscoveryService {
         Log.i(TAG, "Bluetooth device discovery started.");
     }
 
+    /**
+     * 获得系统保存的配对成功过的设备，并尝试连接
+     */
+    private boolean getBltList() {
+        if (BLUETOOTH_ADAPTER == null) {
+            return false;
+        }
+        // 获得已配对的远程蓝牙设备的集合
+        Set<BluetoothDevice> devices = BLUETOOTH_ADAPTER.getBondedDevices();
+        if (devices.size() > 0) {
+            for (BluetoothDevice device : devices) {
+                // 自动连接已有蓝牙设备
+                if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+                    // 如果这个设备取消了配对，则尝试配对
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        if (device.createBond()) {
+                            return true;
+                        }
+                    }
+                } else if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    final BluetoothDeviceWrapper wrapper = new BluetoothDeviceWrapper();
+                    wrapper.setDevice(device);
+                    wrapper.setSignalStrength(66);
+                    onDeviceDiscovered(wrapper);
+                }
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings("deprecation")
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    public void startKitKatScan() {
+    private void startKitKatScan() {
         kitKatScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -90,7 +127,7 @@ public class DeviceDiscoveryService {
                 onDeviceDiscovered(wrapper);
             }
         };
-        bluetoothAdapter.startLeScan(kitKatScanCallback);
+        BLUETOOTH_ADAPTER.startLeScan(kitKatScanCallback);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -105,7 +142,25 @@ public class DeviceDiscoveryService {
                 onDeviceDiscovered(wrapper);
             }
         };
-        bluetoothAdapter.getBluetoothLeScanner().startScan(lolipopScanCallback);
+        BLUETOOTH_ADAPTER.getBluetoothLeScanner().startScan(lolipopScanCallback);
+    }
+
+    /**
+     * 输入mac地址进行自动配对
+     * 前提是系统保存了该地址的对象
+     *
+     * @param address 地址
+     */
+    private boolean autoConnect(String address) {
+        if (BLUETOOTH_ADAPTER.isDiscovering()) {
+            BLUETOOTH_ADAPTER.cancelDiscovery();
+        }
+        BluetoothDevice btDev = BLUETOOTH_ADAPTER.getRemoteDevice(address);
+        final BluetoothDeviceWrapper wrapper = new BluetoothDeviceWrapper();
+        wrapper.setDevice(btDev);
+        wrapper.setSignalStrength(66);
+        onDeviceDiscovered(wrapper);
+        return true;
     }
 
     private void onDeviceDiscovered(final BluetoothDeviceWrapper wrapper) {
@@ -135,9 +190,9 @@ public class DeviceDiscoveryService {
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            bluetoothAdapter.stopLeScan(kitKatScanCallback);
+            BLUETOOTH_ADAPTER.stopLeScan(kitKatScanCallback);
         } else {
-            bluetoothAdapter.getBluetoothLeScanner().stopScan(lolipopScanCallback);
+            BLUETOOTH_ADAPTER.getBluetoothLeScanner().stopScan(lolipopScanCallback);
         }
 
         sendBroadcast(new Intent(SCAN_STOPPED));
@@ -145,11 +200,11 @@ public class DeviceDiscoveryService {
         BackgroundExecutor.cancelAll(SCAN_TASK, true);
     }
 
-    boolean isEnabled() {
-        if (bluetoothAdapter == null) {
+    private boolean isEnabled() {
+        if (BLUETOOTH_ADAPTER == null) {
             Log.e(TAG, "Bluetooth not supported");
             return false;
-        } else if (!bluetoothAdapter.isEnabled()) {
+        } else if (!BLUETOOTH_ADAPTER.isEnabled()) {
             context.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
             return false;
         } else {
@@ -160,5 +215,39 @@ public class DeviceDiscoveryService {
 
     private void sendBroadcast(Intent intent) {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    /**
+     * 获取已经配对完成的设备列表
+     */
+    private BluetoothDevice getHasPairDevices() {
+        // 得到BluetoothAdapter的Class对象
+        Class<BluetoothAdapter> bluetoothAdapterClass = BluetoothAdapter.class;
+        try {// 得到连接状态的方法
+            Method method = bluetoothAdapterClass.getDeclaredMethod("getConnectionState", (Class[]) null);
+            // 打开权限
+            method.setAccessible(true);
+            int state = (int) method.invoke(BLUETOOTH_ADAPTER, (Object[]) null);
+
+            if (state == BluetoothAdapter.STATE_CONNECTED) {
+                Log.i("BLUETOOTH", "BluetoothAdapter.STATE_CONNECTED");
+                Set<BluetoothDevice> devices = BLUETOOTH_ADAPTER.getBondedDevices();
+                Log.i("BLUETOOTH", "devices:" + devices.size());
+
+                for (BluetoothDevice device : devices) {
+                    @SuppressLint("PrivateApi") Method isConnectedMethod = BluetoothDevice.class
+                            .getDeclaredMethod("isConnected", (Class[]) null);
+                    method.setAccessible(true);
+                    boolean isConnected = (boolean) isConnectedMethod.invoke(device, (Object[]) null);
+                    if (isConnected) {
+                        Log.i("BLUETOOTH", "connected:" + device.getName());
+                        return device;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -26,7 +26,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:indeterminate="true"
-                android:visibility="invisible"/>
+                android:visibility="invisible" />
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
@@ -52,7 +52,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="Connecting..."
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <LinearLayout
                 android:id="@+id/readings"
@@ -65,77 +65,82 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_battery"
-                    app:readingType="battery"/>
+                    app:readingType="battery" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingTemperature"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_temperature"
-                    app:readingType="temperature"/>
+                    app:readingType="temperature" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingHumidity"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_humidity"
-                    app:readingType="humidity"/>
+                    app:readingType="humidity" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingPressure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_pressure"
-                    app:readingType="pressure"/>
+                    app:readingType="pressure" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingHeartRate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_heartbeat"
-                    app:readingType="heartrate"/>
+                    app:readingType="heartrate" />
+
+                <com.txusballesteros.SnakeView
+                    android:id="@+id/snake"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingLight"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_light"
-                    app:readingType="light"/>
+                    app:readingType="light" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingSteps"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_steps"
-                    app:readingType="steps"/>
+                    app:readingType="steps" />
 
                 <com.wolkabout.hexiwear.view.SingleReading_
                     android:id="@+id/readingCalories"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_calories"
-                    app:readingType="calories"/>
+                    app:readingType="calories" />
 
                 <com.wolkabout.hexiwear.view.TripleReading_
                     android:id="@+id/readingAcceleration"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_accelerometer"
-                    app:readingType="acceleration"/>
+                    app:readingType="acceleration" />
 
                 <com.wolkabout.hexiwear.view.TripleReading_
                     android:id="@+id/readingMagnet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_magnet"
-                    app:readingType="magnet"/>
+                    app:readingType="magnet" />
 
                 <com.wolkabout.hexiwear.view.TripleReading_
                     android:id="@+id/readingGyro"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:image="@drawable/ic_gyroscope"
-                    app:readingType="gyro"/>
+                    app:readingType="gyro" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -27,9 +27,9 @@ import com.wolkabout.hexiwear.R;
 import org.parceler.Parcel;
 
 /**
- * @author none
+ * 蓝牙信号强弱显示
  *
- * 蓝牙设备的封装类
+ * @author notzuonotdied
  */
 @Parcel
 public class BluetoothDeviceWrapper {
